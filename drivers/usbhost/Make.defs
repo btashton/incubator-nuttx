@@ -82,6 +82,10 @@ ifeq ($(CONFIG_USBHOST_FT232R),y)
 CSRCS += usbhost_ft232r.c
 endif
 
+ifeq ($(CONFIG_USBHOST_RTLSDR),y)
+CSRCS += usbhost_rtlsdr.c
+endif
+
 # HCD debug/trace logic
 
 ifeq ($(CONFIG_USBHOST_TRACE),y)

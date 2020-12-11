@@ -206,6 +206,16 @@ int imxrt_usbhost_initialize(void)
     }
 #endif
 
+#ifdef CONFIG_USBHOST_RTLSDR
+  /* Register the USB host HID keyboard class driver */
+
+  ret = usbhost_rtlsdrinit();
+  if (ret != OK)
+    {
+      uerr("ERROR: Failed to register the KBD class\n");
+    }
+#endif
+
   /* Then get an instance of the USB EHCI interface. */
 
   g_ehciconn = imxrt_ehci_initialize(0);

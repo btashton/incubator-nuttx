@@ -592,6 +592,39 @@ config MAX3421E_USBHOST_PKTDUMP
 
 endif # USBHOST_MAX3421E
 
+config USBHOST_RTLSDR
+	bool "RTLSDR Software Defined Radio"
+	default n
+	select SCHED_LPWORK
+	---help---
+		Enable support for the RTLSDR software defined radio
+
+if USBHOST_RTLSDR
+
+config RTLSDR_DESCSIZE
+	int "Max descriptor size"
+	default 128
+	---help---
+		Maximum size of a descriptor.  Default: 128
+
+config RTLSDR_USBHOST_REGDEBUG
+	bool "RTLSDR register debug"
+	default n
+	depends on DEBUG_USB_INFO
+	---help---
+		Enable very low-level register access debug.  Depends on
+		CONFIG_DEBUG_USB_INFO.
+
+config RTLSDR_USBHOST_PKTDUMP
+	bool "RTLSDR packet dump"
+	default n
+	depends on DEBUG_USB_INFO
+	---help---
+		Dump all incoming and outgoing USB packets. Depends on
+		CONFIG_DEBUG_USB_INFO.
+
+endif # USBHOST_RTLSDR
+
 config USBHOST_TRACE
 	bool "Enable USB HCD tracing for debug"
 	default n
