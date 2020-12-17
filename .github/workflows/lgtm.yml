@@ -98,7 +98,6 @@ jobs:
           fetch-depth: 1
       - name: Fake version tag
         run: git tag v0.0.0
-
       - name: Checkout apps repo
         uses: actions/checkout@v2
         with:
@@ -106,16 +105,15 @@ jobs:
           ref: ${{ steps.gittargets.outputs.apps_ref }}
           path: ./apps
           fetch-depth: 1
-
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v1
         with:
           languages: cpp
-          queries: +security-and-quality, github/codeql/cpp/config/suites/security/cwe-190@main
+          queries: +security-and-quality, github/codeql/cpp/ql/src/Security/CWE/CWE-190/@main
+          # CWE-190
           # Override the default behavior so that the action doesn't attempt
           # to auto-install Python dependencies
           setup-python-dependencies: false
-
       - name: Run builds
         env:
           BLOBDIR: /tools/blobs
