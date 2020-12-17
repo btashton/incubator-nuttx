@@ -31,7 +31,8 @@ jobs:
 
     strategy:
       matrix:
-        config: ['sim:duktape', 'sim:mtdpart', 'sim:minibasic', 'sim:bluetooth', 'sim:nsh', 'sim:nx11', 'sim:fb', 'sim:rpserver', 'sim:nettest', 'sim:unionfs', 'sim:sotest32', 'sim:ustream', 'sim:loadable', 'sim:nxffs', 'sim:bas', 'sim:dsptest', 'sim:tcpblaster', 'sim:configdata', 'sim:rc', 'sim:pf_ieee802154', 'sim:libcxxtest', 'sim:tcploop', 'sim:lvgl', 'sim:alsa', 'sim:bthcisock', 'sim:sotest', 'sim:smp', 'sim:pktradio', 'sim:ostest', 'sim:linuxi2c', 'sim:mtdrwb', 'sim:nxwm', 'sim:module32', 'sim:sensor', 'sim:sixlowpan', 'sim:module', 'sim:nx', 'stm32f4discovery:kostest']
+        config: ['sim:nsh', 'sim:ostest', 'sim:smp', 'sim:tcpblaster', 'stm32f4discovery:kostest']
+        #config: ['sim:duktape', 'sim:mtdpart', 'sim:minibasic', 'sim:bluetooth', 'sim:nsh', 'sim:nx11', 'sim:fb', 'sim:rpserver', 'sim:nettest', 'sim:unionfs', 'sim:sotest32', 'sim:ustream', 'sim:loadable', 'sim:nxffs', 'sim:bas', 'sim:dsptest', 'sim:tcpblaster', 'sim:configdata', 'sim:rc', 'sim:pf_ieee802154', 'sim:libcxxtest', 'sim:tcploop', 'sim:lvgl', 'sim:alsa', 'sim:bthcisock', 'sim:sotest', 'sim:smp', 'sim:pktradio', 'sim:ostest', 'sim:linuxi2c', 'sim:mtdrwb', 'sim:nxwm', 'sim:module32', 'sim:sensor', 'sim:sixlowpan', 'sim:module', 'sim:nx', 'stm32f4discovery:kostest']
 
     steps:
       - name: Determine Target Branches
@@ -110,7 +111,7 @@ jobs:
         uses: github/codeql-action/init@v1
         with:
           languages: cpp
-          queries: +security-and-quality
+          queries: +security-and-quality, github/codeql/cpp/config/suites/security/cwe-190@main
           # Override the default behavior so that the action doesn't attempt
           # to auto-install Python dependencies
           setup-python-dependencies: false
