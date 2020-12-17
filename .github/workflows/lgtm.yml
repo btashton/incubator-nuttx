@@ -25,8 +25,15 @@ on:
     tags:
 
 jobs:
-  Fetch-Source:
+  Linux:
     runs-on: ubuntu-latest
+    container:
+      image: docker.pkg.github.com/apache/incubator-nuttx-testing/nuttx-ci-linux
+      credentials:
+        username: ${GITHUB_ACTOR}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    env:
+      DOCKER_BUILDKIT: 1
     steps:
       - name: Determine Target Branches
         id: gittargets
@@ -100,110 +107,22 @@ jobs:
           path: sources/apps
           fetch-depth: 1
 
-      - name: Checkout testing repo
-        uses: actions/checkout@v2
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v1
         with:
-          repository: apache/incubator-nuttx-testing
-          ref: ${{ steps.gittargets.outputs.testing_ref }}
-          path: sources/testing
-          fetch-depth: 1
+          languages: cpp, python
+          # Override the default behavior so that the action doesn't attempt
+          # to auto-install Python dependencies
+          setup-python-dependencies: false
 
-      - name: Tar sources
-        run: tar zcf sources.tar.gz sources
-      - name: Archive Source Bundle
-        uses: actions/upload-artifact@v1
-        with:
-          name: source-bundle
-          path: sources.tar.gz
-
-  Linux:
-    needs: Fetch-Source
-    runs-on: ubuntu-latest
-    env:
-      DOCKER_BUILDKIT: 1
-
-    strategy:
-      matrix:
-        boards: [arm-01, arm-02, arm-03, arm-04, arm-05, arm-06, arm-07, arm-08, arm-09, arm-10, arm-11, arm-12, arm-13, other, sim]
-
-    steps:
-      - name: Download Source Artifact
-        uses: actions/download-artifact@v1
-        with:
-          name: source-bundle
-          path: .
-      - name: Extract sources
-        run: tar zxf sources.tar.gz
-      - name: Docker Login
-        uses: azure/docker-login@v1
-        with:
-          login-server: docker.pkg.github.com
-          username: ${GITHUB_ACTOR}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Docker Pull
-        uses: nick-invision/retry@v1
-        with:
-          timeout_minutes: 10
-          max_attempts: 3
-          retry_wait_seconds: 10
-          command: docker pull docker.pkg.github.com/apache/incubator-nuttx-testing/nuttx-ci-linux
-
-      - name: Export NuttX Repo SHA
-        run: echo "nuttx_sha=`git -C sources/nuttx rev-parse HEAD`" >> $GITHUB_ENV
       - name: Run builds
-        uses: ./sources/testing/.github/actions/ci-container
         env:
           BLOBDIR: /tools/blobs
-        with:
-          run: |
-            echo "::add-matcher::sources/nuttx/.github/gcc.json"
-            export CCACHE_DIR=`pwd`/ccache
-            mkdir $CCACHE_DIR
-            cd sources/testing
-            export ARTIFACTDIR=`pwd`/../../buildartifacts
-            ./cibuild.sh -A -c testlist/${{matrix.boards}}.dat
-            ccache -s
-      - uses: actions/upload-artifact@v2
-        with:
-          name: linux-builds
-          path: buildartifacts/
-
-  macOS:
-    runs-on: macos-10.15
-    needs: Fetch-Source
-    strategy:
-      matrix:
-        boards: [arm-12, other, sim]
-    steps:
-      - name: Download Source Artifact
-        uses: actions/download-artifact@v1
-        with:
-          name: source-bundle
-          path: .
-      - name: Extract sources
-        run: tar zxf sources.tar.gz
-      - name: Restore Tools Cache
-        id: cache-tools
-        uses: actions/cache@v2
-        env:
-          cache-name: ${{ runner.os }}-cache-tools
-        with:
-          path: prebuilt
-          key: ${{ runner.os }}-tools-${{ hashFiles('./sources/testing/cibuild.sh') }}
-
-      - name: Export NuttX Repo SHA
-        run: echo "nuttx_sha=`git -C sources/nuttx rev-parse HEAD`" >> $GITHUB_ENV
-      - name: Run Builds
         run: |
           echo "::add-matcher::sources/nuttx/.github/gcc.json"
-          export CCACHE_DIR=`pwd`/ccache
-          mkdir $CCACHE_DIR
-          cd sources/testing
-          export ARTIFACTDIR=`pwd`/../../buildartifacts
-          ./cibuild.sh -i -A -c testlist/${{matrix.boards}}.dat
-          ccache -s
-      - uses: actions/upload-artifact@v2
-        with:
-          name: macos-builds
-          path: buildartifacts/
+          cd sources/nuttx
+          ./tools/configure.sh sim:nsh
+          make -j8
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v1
