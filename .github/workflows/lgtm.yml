@@ -14,11 +14,7 @@ name: Build
 
 on:
   pull_request:
-    paths-ignore:
-      - 'Documentation/**'
   push:
-    paths-ignore:
-      - 'Documentation/**'
     branches:
       - master
       - 'releases/*'
@@ -32,8 +28,11 @@ jobs:
       credentials:
         username: ${GITHUB_ACTOR}
         password: ${{ secrets.GITHUB_TOKEN }}
-    env:
-      DOCKER_BUILDKIT: 1
+
+    strategy:
+      matrix:
+        config: ['sim:duktape', 'sim:mtdpart', 'sim:minibasic', 'sim:bluetooth', 'sim:nsh', 'sim:nx11', 'sim:fb', 'sim:rpserver', 'sim:nettest', 'sim:unionfs', 'sim:sotest32', 'sim:ustream', 'sim:loadable', 'sim:nxffs', 'sim:bas', 'sim:dsptest', 'sim:tcpblaster', 'sim:configdata', 'sim:rc', 'sim:pf_ieee802154', 'sim:libcxxtest', 'sim:tcploop', 'sim:lvgl', 'sim:alsa', 'sim:bthcisock', 'sim:sotest', 'sim:smp', 'sim:pktradio', 'sim:ostest', 'sim:linuxi2c', 'sim:mtdrwb', 'sim:nxwm', 'sim:module32', 'sim:sensor', 'sim:sixlowpan', 'sim:module', 'sim:nx', 'stm32f4discovery:kostest']
+
     steps:
       - name: Determine Target Branches
         id: gittargets
@@ -96,8 +95,8 @@ jobs:
           ref: ${{ steps.gittargets.outputs.os_ref }}
           path: ./
           fetch-depth: 1
-      - name: Checkout nuttx repo tags
-        run: git fetch --tags
+      - name: Fake version tag
+        run: git tag v0.0.0
 
       - name: Checkout apps repo
         uses: actions/checkout@v2
@@ -121,7 +120,7 @@ jobs:
           BLOBDIR: /tools/blobs
         run: |
           echo "::add-matcher::.github/gcc.json"
-          ./tools/configure.sh -a ./apps sim:nsh
+          ./tools/configure.sh -a ./apps ${{matrix.config}}
           make -j8
 
       - name: Perform CodeQL Analysis
