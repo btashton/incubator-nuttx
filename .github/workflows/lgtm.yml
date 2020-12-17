@@ -1,0 +1,122 @@
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+name: Build
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+      - 'releases/*'
+    tags:
+
+jobs:
+  Linux:
+    runs-on: ubuntu-latest
+    container:
+      image: docker.pkg.github.com/apache/incubator-nuttx-testing/nuttx-ci-linux
+      credentials:
+        username: ${GITHUB_ACTOR}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    strategy:
+      matrix:
+        config: ['sim:nsh', 'sim:ostest', 'sim:smp', 'sim:tcpblaster', 'stm32f4discovery:kostest']
+        #config: ['sim:duktape', 'sim:mtdpart', 'sim:minibasic', 'sim:bluetooth', 'sim:nsh', 'sim:nx11', 'sim:fb', 'sim:rpserver', 'sim:nettest', 'sim:unionfs', 'sim:sotest32', 'sim:ustream', 'sim:loadable', 'sim:nxffs', 'sim:bas', 'sim:dsptest', 'sim:tcpblaster', 'sim:configdata', 'sim:rc', 'sim:pf_ieee802154', 'sim:libcxxtest', 'sim:tcploop', 'sim:lvgl', 'sim:alsa', 'sim:bthcisock', 'sim:sotest', 'sim:smp', 'sim:pktradio', 'sim:ostest', 'sim:linuxi2c', 'sim:mtdrwb', 'sim:nxwm', 'sim:module32', 'sim:sensor', 'sim:sixlowpan', 'sim:module', 'sim:nx', 'stm32f4discovery:kostest']
+
+    steps:
+      - name: Determine Target Branches
+        id: gittargets
+        shell: bash
+        run: |
+          TESTING_REF="master"  # Always use master for testing
+          OS_REF=""
+          APPS_REF=""
+
+          REF=$GITHUB_REF
+
+          # If a base ref is set this is a PR and we will want to use
+          # the base ref instead of the ref that triggered the event
+          if [ ${GITHUB_BASE_REF} ]; then
+            REF=refs/heads/$GITHUB_BASE_REF
+          fi
+
+          echo "Working with ref: $REF"
+
+          # We modify for all tags and release branches
+          if [[ $REF =~ refs/heads/releases/*|refs/tags/* ]]; then
+            if [[ $REF =~ refs/heads/* ]]
+              then
+                REF_NAME=${REF##refs/heads/}
+                echo "Working with a branch: $REF_NAME"
+              else
+                REF_NAME=${REF##refs/tags/}
+                echo "Working with a tag: $REF_NAME"
+            fi
+
+            # Determine the repo and leave that unset to use the normal checkout behavior
+            # of using the merge commit instead of HEAD
+            case $GITHUB_REPOSITORY in
+              "btashton/incubator-nuttx")
+                # OS
+                echo "Triggered by change in OS"
+                APPS_REF=$REF_NAME
+                ;;
+
+              "apache/incubator-nuttx-apps" )
+                # APPS
+                OS_REF=$REF_NAME
+                echo "Triggered by change in APPS"
+                ;;
+
+              *)
+                echo "Trigger by change on $GITHUB_REPOSITORY. This is unexpected."
+                ;;
+            esac
+          fi
+
+          echo ::set-output name=os_ref::$OS_REF
+          echo ::set-output name=apps_ref::$APPS_REF
+          echo ::set-output name=testing_ref::$TESTING_REF
+
+      - name: Checkout nuttx repo
+        uses: actions/checkout@v2
+        with:
+          repository: btashton/incubator-nuttx
+          ref: ${{ steps.gittargets.outputs.os_ref }}
+          path: ./
+          fetch-depth: 1
+      - name: Fake version tag
+        run: git tag v0.0.0
+      - name: Checkout apps repo
+        uses: actions/checkout@v2
+        with:
+          repository: apache/incubator-nuttx-apps
+          ref: ${{ steps.gittargets.outputs.apps_ref }}
+          path: ./apps
+          fetch-depth: 1
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v1
+        with:
+          languages: cpp
+          config-file: ./.github/codeql/codeql-config.yml
+      - name: Run builds
+        env:
+          BLOBDIR: /tools/blobs
+        run: |
+          echo "::add-matcher::.github/gcc.json"
+          ./tools/configure.sh -a ./apps ${{matrix.config}}
+          make -j8
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v1
