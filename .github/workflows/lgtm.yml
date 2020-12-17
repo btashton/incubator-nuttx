@@ -94,17 +94,17 @@ jobs:
         with:
           repository: apache/incubator-nuttx
           ref: ${{ steps.gittargets.outputs.os_ref }}
-          path: sources/nuttx
+          path: ./
           fetch-depth: 1
       - name: Checkout nuttx repo tags
-        run: git -C sources/nuttx fetch --tags
+        run: git fetch --tags
 
       - name: Checkout apps repo
         uses: actions/checkout@v2
         with:
           repository: apache/incubator-nuttx-apps
           ref: ${{ steps.gittargets.outputs.apps_ref }}
-          path: sources/apps
+          path: ./apps
           fetch-depth: 1
 
       - name: Initialize CodeQL
@@ -120,9 +120,8 @@ jobs:
         env:
           BLOBDIR: /tools/blobs
         run: |
-          echo "::add-matcher::sources/nuttx/.github/gcc.json"
-          cd sources/nuttx
-          ./tools/configure.sh sim:nsh
+          echo "::add-matcher::.github/gcc.json"
+          ./tools/configure.sh -a ./apps sim:nsh
           make -j8
 
       - name: Perform CodeQL Analysis
