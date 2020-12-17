@@ -3,11 +3,7 @@ name: "My CodeQL config"
 disable-default-queries: true
 
 queries:
-  - name: Use an external query for CWE-190
-    uses: github/codeql/cpp/ql/src/Security/CWE/CWE-190/@main
-
-paths:
-  - mm
-paths-ignore: 
-  - apps
-
+  - name: Use an external cpp security
+    uses: github/codeql/cpp/ql/src/Security/CWE/@main
+  - name: Use an external cpp experimental
+    uses: github/codeql/cpp/ql/src/experimental/Security/CWE/@main
