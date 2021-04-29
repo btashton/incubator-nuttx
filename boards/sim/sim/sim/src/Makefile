@@ -73,4 +73,8 @@ ifeq ($(CONFIG_SIM_MOTOR_FOC),y)
 CSRCS += sim_foc.c
 endif
 
+ifeq ($(CONFIG_SIM_USBHOST),y)
+CSRCS += sim_usb.c
+endif
+
 include $(TOPDIR)/boards/Board.mk

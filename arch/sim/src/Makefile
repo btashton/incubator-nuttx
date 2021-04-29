@@ -226,6 +226,11 @@ ifeq ($(CONFIG_SIM_SOUND_ALSA),y)
   STDLIBS += -lasound
 endif
 
+ifeq ($(CONFIG_SIM_LIBUSB),y)
+  CSRCS += up_libusb.c
+  STDLIBS += -lusb-1.0
+endif
+
 ifeq ($(CONFIG_FS_HOSTFS),y)
 ifneq ($(CONFIG_FS_HOSTFS_RPMSG),y)
   HOSTSRCS += up_hostfs.c

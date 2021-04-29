@@ -1317,7 +1317,7 @@ static int usbhost_kbdpoll(int argc, char *argv[])
       npolls++;
       if ((npolls & 31) == 0)
         {
-          uinfo("Still polling: %d\n", npolls);
+          //uinfo("Still polling: %d\n", npolls);
         }
 #endif
 

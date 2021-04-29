@@ -323,6 +323,23 @@ config SIM_NOINPUT
 endchoice # Input Device
 endif # if INPUT
 
+config SIM_USBHOST
+	bool "Simulator USB Host Support"
+	depends on USBHOST
+	default n
+
+if SIM_USBHOST
+
+choice
+	prompt "Simulator USB Driver"
+	default SIM_LIBUSB
+
+config SIM_LIBUSB
+	bool "libusb support for simulator"
+
+endchoice
+endif # SIM_USBHOST
+
 endmenu
 
 config SIM_TCNWAITERS

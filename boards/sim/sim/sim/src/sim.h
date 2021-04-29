@@ -41,6 +41,14 @@
 #  endif
 #endif
 
+/* Check if we should enable the USB monitor before starting NSH */
+
+#define HAVE_USBMONITOR 1
+#if !(defined(CONFIG_USBMONITOR) && defined(CONFIG_USBHOST_TRACE))
+#   undef HAVE_USBMONITOR
+#endif
+
+
 /****************************************************************************
  * Public Function Prototypes
  ****************************************************************************/
@@ -143,6 +151,21 @@ int sim_tsc_setup(int minor);
 
 #ifdef CONFIG_SIM_MOTOR_FOC
 int sim_foc_setup(void);
+#endif
+
+/****************************************************************************
+ * Name: sim_usbhost_initialize
+ *
+ * Description:
+ *   Called at application startup time to initialize the USB host
+ *   functionality.
+ *   This function will start a thread that will monitor for device
+ *   connection/disconnection events.
+ *
+ ****************************************************************************/
+
+#ifdef CONFIG_SIM_USBHOST
+int sim_usb_initialize(void);
 #endif
 
 #endif /* __BOARDS_SIM_SIM_SIM_SRC_SIM_H */

@@ -420,5 +420,29 @@ int sim_bringup(void)
     }
 #endif
 
+#ifdef CONFIG_SIM_USBHOST
+  /* Initialize USB host operation. sim_usbhost_initialize() starts a
+   * thread will monitor for USB connection and disconnection events.
+   */
+
+  ret = sim_usb_initialize();
+  if (ret != OK)
+    {
+      syslog(LOG_ERR, "ERROR: Failed to initialize USB host: %d\n", ret);
+      return ret;
+    }
+
+#ifdef HAVE_USBMONITOR
+  /* Start the USB Monitor */
+
+  ret = usbmonitor_start();
+  if (ret != OK)
+    {
+      syslog(LOG_ERR, "ERROR: Failed to start USB monitor: %d\n", ret);
+    }
+#endif
+
+#endif /* CONFIG_SIM_USB */
+
   return ret;
 }

@@ -1207,7 +1207,8 @@ static int usbhost_mouse_poll(int argc, char *argv[])
       npolls++;
       if ((npolls & 31) == 0)
         {
-          uinfo("Still polling: %d\n", npolls);
+          nxsig_usleep(2 * 1000);
+          //uinfo("Still polling: %d\n", npolls);
         }
 #endif
     }
